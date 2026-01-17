@@ -22,6 +22,13 @@ The game supports both **Single Player (AI)** and **Multiplayer** modes with a c
 - **Minimax Algorithm** (for AI decision-making)
 
 ---
+## Screenshots 📸
+
+### Game Board
+![Game Start](screenshots/game_start.png)
+
+### Winning State
+![Game Win](screenshots/game_win.png)
 
 ## How to Run the Project ▶️
 
