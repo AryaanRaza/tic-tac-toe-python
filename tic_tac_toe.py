@@ -1,104 +1,232 @@
-import streamlit as st
+from tkinter import *
 
-# Initialize Game State
-if 'board' not in st.session_state:
-    st.session_state.board = {i: " " for i in range(1, 10)}
-    st.session_state.turn = "X"
-    st.session_state.game_end = False
-    st.session_state.mode = "single_player"
+root = Tk()
+root.geometry("420x621")
+root.title("Tic tac toe ")
+# setting the main window colour
+root.configure(bg="#E6E6fA")
+root.resizable(0,0)
 
-def check_for_win(player, board):
-    win_conditions = [(1,2,3), (4,5,6), (7,8,9), (1,4,7), (2,5,8), (3,6,9), (1,5,9), (3,5,7)]
-    return any(all(board[pos] == player for pos in combo) for combo in win_conditions)
+frame1 = Frame(root)
+frame1.grid()
 
-def check_for_draw(board):
-    return all(board[pos] != " " for pos in board)
+titleLabel = Label( frame1 , text = "Tic Tac Toe game board", font = ("Algerian",22,"bold" ), bg = "#E6E6fA", fg ="black",padx=4)
+titleLabel.grid(row = 0 ,column=0)
 
-def minimax(board_state, is_maximizing):
-    if check_for_win("O", board_state): return 1
-    if check_for_win("X", board_state): return -1
-    if check_for_draw(board_state): return 0
+optionFrame = Frame(root , bg="grey")
+optionFrame.grid()
 
-    if is_maximizing:
-        best_score = float('-inf')
-        for key in board_state:
-            if board_state[key] == " ":
-                board_state[key] = "O"
-                score = minimax(board_state, False)
-                board_state[key] = " "
-                best_score = max(score, best_score)
-        return best_score
-    else:
-        best_score = float('inf')
-        for key in board_state:
-            if board_state[key] == " ":
-                board_state[key] = "X"
-                score = minimax(board_state, True)
-                board_state[key] = " "
-                best_score = min(score, best_score)
-        return best_score
+frame2 = Frame(root,bg="#2F4F4F")
+frame2.grid()
 
-def play_computer():
-    best_score = float('-inf')
-    best_move = None
-    for key in st.session_state.board:
-        if st.session_state.board[key] == " ":
-            st.session_state.board[key] = "O"
-            score = minimax(st.session_state.board, False)
-            st.session_state.board[key] = " "
-            if score > best_score:
-                best_score = score
-                best_move = key
-    if best_move:
-        st.session_state.board[best_move] = "O"
+# To Store the Entered Element
+board = { 1 : " " ,2 : " " ,3 : " ", 
+          4 : " " ,5 : " " ,6 : " ",
+          7 : " " ,8 : " " ,9 : " " }
 
-def handle_click(i):
-    if st.session_state.board[i] == " " and not st.session_state.game_end:
-        st.session_state.board[i] = st.session_state.turn
+turn = "X"
+game_end = False
+msglabel = None  # Store the label reference here
+mode = "singlePlayer"
+
+def changeModeToSinglePlayer(): 
+   global mode 
+   mode = "singlePlayer"
+   singlePlayerButton["bg"] = "#CD5C5C"
+   multiPlayerButton["bg"] = "#F5F5DC"
+
+def changeModeToMultiplayer():
+   global mode 
+   mode = "multiPlayer"
+   multiPlayerButton["bg"] = "#CD5C5C"
+   singlePlayerButton["bg"] = "#F5F5DC"
+
+def updateBoard():
+   for key in board.keys():
+      buttons[key-1]["text"] = board[key]
+
+#WINNIN CHECK FUNCTION
+def checkForWin(player):
+    return (board[1] == board[2] == board[3] == player or
+            board[4] == board[5] == board[6] == player or
+            board[7] == board[8] == board[9] == player or
+            board[1] == board[4] == board[7] == player or
+            board[2] == board[5] == board[8] == player or
+            board[3] == board[6] == board[9] == player or
+            board[1] == board[5] == board[9] == player or
+            board[3] == board[5] == board[7] == player)
+
+
+# CHECK FOR DRAW
+def checkfordraw():
+   for i in board.keys():
+      if board[i]==" ":
+          return False
+   return True
+
+def RestartGame():
+   global game_end, turn, msglabel
+   turn = "X"
+   game_end = False
+   for button in buttons:
+      button["text"]=" "
+   for i in board.keys():
+      board[i]=" "
+    # Destroy the outcome label if it exists
+   if msglabel is not None:
+        msglabel.destroy()
+        msglabel = None  # Reset the label reference
+
+def minimax(board , isMaximizing):
+    
+   if checkForWin("O"):
+        return 1 
+   if checkForWin("X"):
+        return -1
+   if checkfordraw():
+        return 0
+   if isMaximizing: 
+      bestScore = -100  #bestScore = -float("inf")   float("inf") represents positive infinity in Python, so -float("inf") is negative infinity.
+      for key in board.keys():
+         if board[key] == " ":
+            board[key] = "O"
+            score = minimax(board , False) # minimax
+            board[key] = " "
+            if score > bestScore : 
+               bestScore = score 
         
-        if check_for_win(st.session_state.turn, st.session_state.board):
-            st.session_state.game_end = True
-        elif check_for_draw(st.session_state.board):
-            st.session_state.game_end = True
+      return bestScore
+    
+   else:
+      bestScore = 100   #bestScore = -float("inf")
+      for key in board.keys():
+         if board[key] == " ":
+            board[key] = "X"
+            score = minimax(board , True) # minimax
+            board[key] = " "
+            if score < bestScore : 
+               bestScore = score 
+        
+      return bestScore
+    
+def playComputer():
+   bestScore = -100 
+   bestMove = 0
+   for key in board.keys():
+      if board[key] == " ":
+         board[key] = "O"
+         score = minimax(board , False) # minimax
+         board[key] = " "
+         if score > bestScore : 
+               bestScore = score 
+               bestMove = key
+
+   board[bestMove] = "O"  
+   buttons[bestMove - 1]["text"] = "O"  # Update the button text to show "O"  
+
+# Function to play
+def play(event):
+   global turn, game_end, msglabel
+   if game_end:
+        return
+   button = event.widget
+   clicked = buttons.index(button) + 1  # Get button index directly and adjust to board position (1-9)
+
+   if button["text"] == " ":  # Proceed only if the spot is unoccupied
+        board[clicked] = turn
+        button["text"] = turn
+
+        # Check for win condition
+        if checkForWin(turn):
+            msglabel = Label(frame2, text=f"{turn} wins the game", font=("Comic Sans MS", 25), bg="#00008B", fg="#FFFF00", padx=4, pady=15, width=18)
+            msglabel.grid(row=2, column=0, columnspan=3)
+            game_end = True
+
+        elif checkfordraw():  # Check for draw condition
+            #msglabel = Label(frame2, text="Game Draw", bg="#98FB98",fg = "#006400" ,font=("Comic Sans MS", 26), width=18, padx=4, pady=15)
+            msglabel = Label(frame2, text="Game Draw", bg="#DC143C", fg="gold" ,font=("Comic Sans MS", 26), width=18, padx=4, pady=15)
+            msglabel.grid(row=2, column=0, columnspan=3)
+            game_end = True
+
         else:
-            if st.session_state.mode == "single_player":
-                play_computer()
-                if check_for_win("O", st.session_state.board):
-                    st.session_state.game_end = True
-            else:
-                st.session_state.turn = "O" if st.session_state.turn == "X" else "X"
+            # Change turn for next player or computer
+            turn = "O" if turn == "X" else "X"
+            #updateBoard()  # Sync board visually
 
-# --- UI Setup ---
-st.set_page_config(page_title="Tic Tac Toe AI", layout="centered")
-st.title("🎮 Tic Tac Toe Game Board")
+            # Handle computer's move if in single-player mode
+            if turn == "O" and mode == "singlePlayer":
+                playComputer()
+                if checkForWin(turn):
+                  msglabel = Label(frame2, text=f"{turn} wins the game", font=("Comic Sans MS", 26),  bg="#4B0082", fg="#FFD700", width=18, padx=4, pady=15)
+                  msglabel.grid(row=2, column=0, columnspan=3)
+                  game_end = True
+                turn = "X"
+                #updateBoard()  # Sync board visually for next turn
 
-# Mode Selection
-mode = st.radio("Select Game Mode:", ["Single Player", "Multiplayer"], horizontal=True)
-st.session_state.mode = "single_player" if mode == "Single Player" else "multi_player"
+   
 
-# Grid UI
-st.write("---")
-board_container = st.container()
-for r in range(3):
-    cols = st.columns(3)
-    for c in range(3):
-        index = r * 3 + c + 1
-        button_label = st.session_state.board[index]
-        if cols[c].button(button_label if button_label != " " else " ", key=f"btn{index}", use_container_width=True):
-            handle_click(index)
-            st.rerun()
+    # restricting user to place in a box already occupied
+# ------ UI --------
 
-# Messages
-if st.session_state.game_end:
-    if check_for_win("X", st.session_state.board):
-        st.success("🎉 X wins the game!")
-    elif check_for_win("O", st.session_state.board):
-        st.error("🤖 O (Computer) wins the game!")
-    else:
-        st.info("🤝 It's a Draw!")
+# Change Mode options 
 
-if st.button("Restart Game", type="primary"):
-    st.session_state.board = {i: " " for i in range(1, 10)}
-    st.session_state.game_end = False
-    st.session_state.turn = "X"
-    st.rerun()
+singlePlayerButton = Button(optionFrame , text="SinglePlayer" , width=13 , height=1 , font=("Arial" , 15) , bg="#F5F5DC" , relief=RAISED , borderwidth=5 , command=changeModeToSinglePlayer)
+singlePlayerButton.grid(row=0 , column=0 , columnspan=1 , sticky=NW)
+
+multiPlayerButton = Button(optionFrame , text="Multiplayer" , width=13 , height=1 , font=("Arial" , 15) , bg="#F5F5DC" , relief=RAISED , borderwidth=5 , command=changeModeToMultiplayer )
+multiPlayerButton.grid(row=0 , column=1 , columnspan=1 , sticky=NW)
+
+# Tic Tac Toe Board 
+#       
+#FIRST ROW
+
+button1 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8)
+button1.grid(row = 1 , column = 0, padx=5, pady=5)
+button1.bind("<Button-1>",play)
+
+button2 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8)  
+button2.grid(row = 1 , column = 1, padx=5, pady=5)
+button2.bind("<Button-1>",play)
+
+button3 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8)  
+button3.grid(row = 1 , column = 2, padx=5, pady=5)
+button3.bind("<Button-1>",play)
+
+#SECOND ROW
+
+button4 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8)   
+button4.grid(row = 2 , column = 0, padx=5, pady=5)
+button4.bind("<Button-1>",play)
+
+button5 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8) 
+button5.grid(row = 2 , column = 1, padx=5, pady=5)
+button5.bind("<Button-1>",play)
+
+button6 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8) 
+button6.grid(row = 2 , column = 2, padx=5, pady=5)
+button6.bind("<Button-1>",play)
+
+#THIRD ROW
+
+button7 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8) 
+button7.grid(row = 3 , column = 0, padx=5, pady=5)
+button7.bind("<Button-1>",play)
+
+button8 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8) 
+button8.grid(row = 3 , column = 1, padx=5, pady=5)
+button8.bind("<Button-1>",play)
+
+button9 = Button(frame2 , text = " ",width = 4 , height = 2,font=("Cooper Black",30),bg="#AFEEEE",fg = "#191970",relief=GROOVE,borderwidth=8)
+button9.grid(row = 3 , column = 2, padx=5, pady=5)
+button9.bind("<Button-1>",play)
+
+
+restartButton = Button(frame2 , text="Restart Game",width=10,height=3,font=("helvetica",10,"bold"),bg="#32CD32",fg = "black",relief=RAISED,borderwidth=20,command=RestartGame) 
+restartButton.grid(row = 6, column=0,)
+
+quitButton = Button(frame2, text="Quit Game", width=10, height=3, font=("helvetica",10,"bold"), bg="#DC143C", fg="black", relief=RAISED, borderwidth=20, command=root.destroy) #FF4500
+quitButton.grid(row=6, column=2)
+
+buttons = [ button1 , button2 , button3 , button4 , button5 , button6 , button7 , button8 , button9 ]
+
+root.mainloop()
